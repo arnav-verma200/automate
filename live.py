@@ -14,21 +14,16 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from webdriver_manager.chrome import ChromeDriverManager
 
-# Path to Chrome executable
 CHROME_PATH = r"C:\Program Files\Google\Chrome\Application\chrome.exe"
-# Path to your Chrome user data folder (for persistent login)
 USER_DATA_DIR = os.path.join(os.path.expanduser("~"), "ChromeAutomation")
 
-# Global driver variable
 driver = None
 input_mode = None
 
 def get_voice_input_continuous():
-    """Continuously listen for voice commands without button press"""
     r = sr.Recognizer()
     mic = sr.Microphone()
     
-    # Adjust for ambient noise once at the start
     print("Calibrating microphone for ambient noise... Please wait...")
     with mic as source:
         r.adjust_for_ambient_noise(source, duration=2)
@@ -36,7 +31,6 @@ def get_voice_input_continuous():
     print("Press ESC to stop listening.\n")
     
     while True:
-        # Check for ESC key to stop
         if keyboard.is_pressed("esc"):
             print("\nStopping continuous listening...")
             return None
@@ -44,21 +38,18 @@ def get_voice_input_continuous():
         try:
             with mic as source:
                 print("🎤 Listening... (say 'Friday' to give a command)")
-                # Listen with a timeout
                 audio = r.listen(source, timeout=5, phrase_time_limit=10)
                 
                 print("🔄 Processing...")
                 text = r.recognize_google(audio)
                 print(f"📢 Heard: {text}")
                 
-                # Check if command starts with "Friday"
                 if text.lower().strip().startswith("friday"):
                     return text
                 else:
                     print("❌ Command ignored (didn't start with 'Friday')\n")
                     
         except sr.WaitTimeoutError:
-            # Normal timeout, just continue listening
             continue
         except sr.UnknownValueError:
             print("❓ Could not understand, still listening...\n")
@@ -73,7 +64,6 @@ def get_voice_input_continuous():
             continue
 
 def get_voice_input_button():
-    """Original button-press voice input"""
     r = sr.Recognizer()
     mic = sr.Microphone()
     
@@ -126,7 +116,6 @@ def get_voice_input_button():
     return None
 
 def has_protocol(name):
-    """Check if a protocol handler exists in Windows registry"""
     try:
         key = winreg.OpenKey(winreg.HKEY_CLASSES_ROOT, f"{name}")
         try:
@@ -140,15 +129,12 @@ def has_protocol(name):
         return False
 
 def create_driver():
-    """Create and return a Chrome WebDriver instance"""
     options = Options()
     options.binary_location = CHROME_PATH
     
-    # Create the user data directory if it doesn't exist
     if not os.path.exists(USER_DATA_DIR):
         os.makedirs(USER_DATA_DIR)
     
-    # Use a dedicated profile for automation (keeps you logged in)
     options.add_argument(f"--user-data-dir={USER_DATA_DIR}")
     options.add_argument("--profile-directory=Default")
     
@@ -174,7 +160,6 @@ def create_driver():
         print(f"Error creating driver: {e}")
         print("\nTrying alternative method...")
         
-        # Try without custom profile as fallback
         try:
             options2 = Options()
             options2.binary_location = CHROME_PATH
@@ -195,7 +180,6 @@ def create_driver():
             return None
 
 def cleanup_driver():
-    """Safely close the driver"""
     global driver
     if driver:
         try:
@@ -205,15 +189,13 @@ def cleanup_driver():
         driver = None
 
 def execute_command(command):
-    """Execute a command (used by both voice and typing modes)"""
     global driver
     
     if command == "exit":
         cleanup_driver()
         print("Goodbye!")
-        return False  # Signal to exit main loop
+        return False  
     
-    # Google search
     elif command.startswith("search "):
         query = command.replace("search ", "", 1).strip()
         if query:
@@ -237,31 +219,25 @@ def execute_command(command):
         else:
             print("❌ No search query provided.\n")
     
-    # Open applications or websites
     elif command.startswith("open "):
         name = command.replace("open ", "", 1).strip()
         app_path = shutil.which(name)
         
-        # Open local apps
         if app_path:
             os.startfile(app_path)
             print(f"✅ Opened {name}\n")
         
-        # Open browsers directly
         elif name in ["chrome", "msedge", "firefox"]:
             os.system(f"start {name}")
             print(f"✅ Opened {name}\n")
         
-        # Open protocol apps
         elif has_protocol(name):
             os.system(f"start {name}://")
             print(f"✅ Opened {name}\n")
         
         else:
-            # Construct URL
             url = f"https://www.{name}.com" if "." not in name else f"https://{name}"
             
-            # Selenium for YouTube
             if "youtube" in name:
                 if not driver:
                     driver = create_driver()
@@ -275,7 +251,6 @@ def execute_command(command):
                         cleanup_driver()
                         return True
                 
-                # Get YouTube search query based on mode
                 if input_mode == "voice_continuous":
                     print("\n🎤 Listening... What do you want to play on YouTube?")
                     youtube_input = get_voice_input_continuous()
@@ -283,7 +258,6 @@ def execute_command(command):
                     if youtube_input:
                         youtube_input_lower = youtube_input.lower().strip()
                         
-                        # Check if starts with "friday"
                         if youtube_input_lower.startswith("friday"):
                             query = youtube_input_lower.replace("friday", "", 1).strip()
                             print(f"\n🔍 Searching for: {query}")
@@ -299,7 +273,6 @@ def execute_command(command):
                     if youtube_input:
                         youtube_input_lower = youtube_input.lower().strip()
                         
-                        # Check if starts with "friday"
                         if youtube_input_lower.startswith("friday"):
                             query = youtube_input_lower.replace("friday", "", 1).strip()
                             print(f"\n🔍 Searching for: {query}")
@@ -322,7 +295,6 @@ def execute_command(command):
                         search_box.send_keys(Keys.RETURN)
                         print(f"🔍 Searching for: {query}")
 
-                        # Wait for results and click first video
                         time.sleep(3)
                         try:
                             first_video = wait.until(
@@ -339,7 +311,6 @@ def execute_command(command):
                 else:
                     print("ℹ️ No query entered. Just opened YouTube.\n")
             
-            # Open other websites normally
             else:
                 webbrowser.open(url)
                 print(f"✅ Opened {url}\n")
@@ -350,7 +321,7 @@ def execute_command(command):
         print("  open <name>     - Open app or website")
         print("  exit            - Close program\n")
     
-    return True  # Continue main loop
+    return True 
 
 try:
     print("=" * 60)
@@ -362,7 +333,6 @@ try:
     print("3 - Typing")
     print("-" * 60)
     
-    # Get input mode selection
     while True:
         mode_choice = input("\nEnter your choice (1, 2, or 3): ").strip()
         if mode_choice == "1":
@@ -390,16 +360,14 @@ try:
     print("Your login will be saved for future sessions.\n")
     
     while True:
-        # Get command based on selected mode
         if input_mode == "voice_continuous":
             voice_input = get_voice_input_continuous()
             
-            if voice_input is None:  # ESC was pressed
+            if voice_input is None:  
                 cleanup_driver()
                 print("Goodbye!")
                 break
             
-            # Remove "friday" from the beginning
             command = voice_input.lower().replace("friday", "", 1).strip()
             print(f"⚡ Executing: {command}\n")
             
@@ -410,9 +378,7 @@ try:
             if voice_input:
                 voice_input_lower = voice_input.lower().strip()
                 
-                # Check if command starts with "friday"
                 if voice_input_lower.startswith("friday"):
-                    # Remove "friday" from the beginning
                     command = voice_input_lower.replace("friday", "", 1).strip()
                     print(f"\n⚡ Executing: {command}\n")
                 else:
@@ -424,7 +390,6 @@ try:
         else:
             command = input("\nCommand: ").lower().strip()
         
-        # Execute the command
         should_continue = execute_command(command)
         if not should_continue:
             break
