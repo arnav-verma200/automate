@@ -5,6 +5,7 @@ import winreg
 import time
 import speech_recognition as sr
 import keyboard
+import pyttsx3
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.chrome.options import Options
@@ -20,25 +21,45 @@ USER_DATA_DIR = os.path.join(os.path.expanduser("~"), "ChromeAutomation")
 driver = None
 input_mode = None
 
-def get_voice_input_continuous():
+def speak(text):
+    """Text-to-speech function"""
+    try:
+        engine = pyttsx3.init()
+        engine.setProperty('rate', 175)
+        engine.setProperty('volume', 0.9)
+        print(text)
+        engine.say(text)
+        engine.runAndWait()
+        engine.stop()
+    except Exception as e:
+        print(f"Speech error: {e}")
+
+def get_voice_input_continuous(first_run=False):
     r = sr.Recognizer()
     mic = sr.Microphone()
     
-    print("Calibrating microphone for ambient noise... Please wait...")
-    with mic as source:
-        r.adjust_for_ambient_noise(source, duration=2)
-    print("Calibration complete! Listening continuously...")
-    print("Press ESC to stop listening.\n")
+    if first_run:
+        print("Calibrating microphone for ambient noise... Please wait...")
+        speak("Calibrating microphone, please wait")
+        
+        with mic as source:
+            r.adjust_for_ambient_noise(source, duration=2)
+        
+        print("Calibration complete! Listening continuously. Press ESC to stop listening.")
+        speak("Ready. I'm listening")
     
     while True:
         if keyboard.is_pressed("esc"):
-            print("\nStopping continuous listening...")
+            print("Stopping continuous listening...")
+            speak("Goodbye")
             return None
         
         try:
             with mic as source:
-                print("🎤 Listening... (say 'Friday' to give a command)")
-                audio = r.listen(source, timeout=5, phrase_time_limit=10)
+                if first_run:
+                    r.adjust_for_ambient_noise(source, duration=0.5)
+                print("🎤 Listening... say 'Friday' to give a command")
+                audio = r.listen(source, timeout=5, phrase_time_limit=16)
                 
                 print("🔄 Processing...")
                 text = r.recognize_google(audio)
@@ -56,10 +77,12 @@ def get_voice_input_continuous():
             continue
         except sr.RequestError as e:
             print(f"❌ Recognition service error: {e}")
+            speak("Recognition service error")
             time.sleep(1)
             continue
         except Exception as e:
             print(f"❌ Error: {e}")
+            speak("An error occurred")
             time.sleep(1)
             continue
 
@@ -154,11 +177,9 @@ def create_driver():
             options=options
         )
         print("Chrome opened successfully!")
-        print("Tip: Click 'Sign in' in the top right to stay logged in")
         return new_driver
     except Exception as e:
-        print(f"Error creating driver: {e}")
-        print("\nTrying alternative method...")
+        print(f"Error creating driver: {e}. Trying alternative method...")
         
         try:
             options2 = Options()
@@ -173,10 +194,12 @@ def create_driver():
                 service=Service(ChromeDriverManager().install()), 
                 options=options2
             )
-            print("Chrome opened (temporary session - won't save login)")
+            print("Chrome opened (temporary session)")
             return new_driver
         except Exception as e2:
-            print(f"Still failed: {e2}")
+            print(f"Failed to open Chrome: {e2}")
+            if input_mode == "voice_continuous":
+                speak("Failed to open Chrome")
             return None
 
 def cleanup_driver():
@@ -188,13 +211,78 @@ def cleanup_driver():
             pass
         driver = None
 
+def play_youtube_video(query):
+    """Play a YouTube video with the given query"""
+    global driver
+    
+    if not driver:
+        driver = create_driver()
+    
+    if driver:
+        try:
+            driver.get("https://www.youtube.com")
+            msg = f"✅ Opening YouTube to play: {query}"
+            if input_mode == "voice_continuous":
+                speak(msg)
+            else:
+                print(msg)
+            
+            wait = WebDriverWait(driver, 10)
+            search_box = wait.until(
+                EC.presence_of_element_located((By.NAME, "search_query"))
+            )
+            search_box.clear()
+            search_box.send_keys(query)
+            search_box.send_keys(Keys.RETURN)
+            
+            time.sleep(3)
+            try:
+                first_video = wait.until(
+                    EC.element_to_be_clickable((By.XPATH, '(//a[@id="video-title"])[1]'))
+                )
+                video_title = first_video.get_attribute("title")
+                first_video.click()
+                msg = f"▶️ Now playing: {video_title}\n"
+                if input_mode == "voice_continuous":
+                    speak(f"Now playing {video_title}")
+                else:
+                    print(msg)
+            except Exception:
+                msg = "✅ Search results displayed\n"
+                if input_mode == "voice_continuous":
+                    speak(msg)
+                else:
+                    print(msg)
+        except Exception as e:
+            msg = f"❌ Error playing video: {e}\n"
+            if input_mode == "voice_continuous":
+                speak(msg)
+            else:
+                print(msg)
+            cleanup_driver()
+
 def execute_command(command):
     global driver
     
     if command == "exit":
         cleanup_driver()
-        print("Goodbye!")
+        msg = "Goodbye!"
+        if input_mode == "voice_continuous":
+            speak(msg)
+        else:
+            print(msg)
         return False  
+    
+    elif command.startswith("play "):
+        query = command.replace("play ", "", 1).strip()
+        if query:
+            play_youtube_video(query)
+        else:
+            msg = "❌ No video name provided.\n"
+            if input_mode == "voice_continuous":
+                speak(msg)
+            else:
+                print(msg)
     
     elif command.startswith("search "):
         query = command.replace("search ", "", 1).strip()
@@ -212,12 +300,24 @@ def execute_command(command):
                     search_box.clear()
                     search_box.send_keys(query)
                     search_box.send_keys(Keys.RETURN)
-                    print(f"✅ Searching Google for: {query}\n")
+                    msg = f"✅ Searching Google for: {query}\n"
+                    if input_mode == "voice_continuous":
+                        speak(msg)
+                    else:
+                        print(msg)
                 except Exception as e:
-                    print(f"❌ Error during search: {e}\n")
+                    msg = f"❌ Error during search: {e}\n"
+                    if input_mode == "voice_continuous":
+                        speak(msg)
+                    else:
+                        print(msg)
                     cleanup_driver()
         else:
-            print("❌ No search query provided.\n")
+            msg = "❌ No search query provided.\n"
+            if input_mode == "voice_continuous":
+                speak(msg)
+            else:
+                print(msg)
     
     elif command.startswith("open "):
         name = command.replace("open ", "", 1).strip()
@@ -225,101 +325,64 @@ def execute_command(command):
         
         if app_path:
             os.startfile(app_path)
-            print(f"✅ Opened {name}\n")
+            msg = f"✅ Opened {name}\n"
+            if input_mode == "voice_continuous":
+                speak(msg)
+            else:
+                print(msg)
         
         elif name in ["chrome", "msedge", "firefox"]:
             os.system(f"start {name}")
-            print(f"✅ Opened {name}\n")
+            msg = f"✅ Opened {name}\n"
+            if input_mode == "voice_continuous":
+                speak(msg)
+            else:
+                print(msg)
         
         elif has_protocol(name):
             os.system(f"start {name}://")
-            print(f"✅ Opened {name}\n")
+            msg = f"✅ Opened {name}\n"
+            if input_mode == "voice_continuous":
+                speak(msg)
+            else:
+                print(msg)
+        
+        elif "youtube" in name:
+            # Just open YouTube without asking for video
+            if not driver:
+                driver = create_driver()
+            
+            if driver:
+                try:
+                    driver.get("https://www.youtube.com")
+                    msg = "✅ Opened YouTube\n"
+                    if input_mode == "voice_continuous":
+                        speak("Opened YouTube")
+                    else:
+                        print(msg)
+                except Exception as e:
+                    msg = f"❌ Error opening YouTube: {e}\n"
+                    if input_mode == "voice_continuous":
+                        speak(msg)
+                    else:
+                        print(msg)
+                    cleanup_driver()
         
         else:
             url = f"https://www.{name}.com" if "." not in name else f"https://{name}"
-            
-            if "youtube" in name:
-                if not driver:
-                    driver = create_driver()
-                
-                if driver:
-                    try:
-                        driver.get(url)
-                        print("✅ Opened YouTube")
-                    except Exception as e:
-                        print(f"❌ Error opening YouTube: {e}\n")
-                        cleanup_driver()
-                        return True
-                
-                if input_mode == "voice_continuous":
-                    print("\n🎤 Listening... What do you want to play on YouTube?")
-                    youtube_input = get_voice_input_continuous()
-                    
-                    if youtube_input:
-                        youtube_input_lower = youtube_input.lower().strip()
-                        
-                        if youtube_input_lower.startswith("friday"):
-                            query = youtube_input_lower.replace("friday", "", 1).strip()
-                            print(f"\n🔍 Searching for: {query}")
-                        else:
-                            print("❌ Command ignored. Please start with 'Friday'")
-                            query = ""
-                    else:
-                        query = ""
-                elif input_mode == "voice_button":
-                    print("\n🎤 What do you want to play on YouTube? (Say 'Friday' first)")
-                    youtube_input = get_voice_input_button()
-                    
-                    if youtube_input:
-                        youtube_input_lower = youtube_input.lower().strip()
-                        
-                        if youtube_input_lower.startswith("friday"):
-                            query = youtube_input_lower.replace("friday", "", 1).strip()
-                            print(f"\n🔍 Searching for: {query}")
-                        else:
-                            print("❌ Command ignored. Please start with 'Friday'")
-                            query = ""
-                    else:
-                        query = ""
-                else:
-                    query = input("What do you want to play on YouTube?: ").strip()
-                
-                if driver and query:
-                    try:
-                        wait = WebDriverWait(driver, 10)
-                        search_box = wait.until(
-                            EC.presence_of_element_located((By.NAME, "search_query"))
-                        )
-                        search_box.clear()
-                        search_box.send_keys(query)
-                        search_box.send_keys(Keys.RETURN)
-                        print(f"🔍 Searching for: {query}")
-
-                        time.sleep(3)
-                        try:
-                            first_video = wait.until(
-                                EC.element_to_be_clickable((By.XPATH, '(//a[@id="video-title"])[1]'))
-                            )
-                            video_title = first_video.get_attribute("title")
-                            first_video.click()
-                            print(f"▶️ Now playing: {video_title}\n")
-                        except Exception:
-                            print("✅ Search results displayed\n")
-                    except Exception as e:
-                        print(f"❌ Error with YouTube: {e}\n")
-                        cleanup_driver()
-                else:
-                    print("ℹ️ No query entered. Just opened YouTube.\n")
-            
+            webbrowser.open(url)
+            msg = f"✅ Opened {url}\n"
+            if input_mode == "voice_continuous":
+                speak(msg)
             else:
-                webbrowser.open(url)
-                print(f"✅ Opened {url}\n")
+                print(msg)
     
     else:
-        print("❌ Unknown command. Available commands:")
-        print("  search <query>  - Search on Google")
-        print("  open <name>     - Open app or website")
-        print("  exit            - Close program\n")
+        msg = "❌ Unknown command. Available commands: play <video>, search <query>, open <name>, exit\n"
+        if input_mode == "voice_continuous":
+            speak(msg)
+        else:
+            print(msg)
     
     return True 
 
@@ -354,18 +417,20 @@ try:
         else:
             print("❌ Invalid choice. Please enter 1, 2, or 3.")
     
-    print("\nCommands: search <query> | open <app/website> | exit")
+    print("\nCommands: play <video> | search <query> | open <app/website> | exit")
     print("-" * 60)
     print("\nℹ️ First time? Sign in to Google when Chrome opens!")
     print("Your login will be saved for future sessions.\n")
     
+    first_voice_command = True
+    
     while True:
         if input_mode == "voice_continuous":
-            voice_input = get_voice_input_continuous()
+            voice_input = get_voice_input_continuous(first_run=first_voice_command)
+            first_voice_command = False
             
             if voice_input is None:  
                 cleanup_driver()
-                print("Goodbye!")
                 break
             
             command = voice_input.lower().replace("friday", "", 1).strip()
@@ -400,4 +465,3 @@ except KeyboardInterrupt:
 except Exception as e:
     print(f"\n❌ Unexpected error: {e}")
     cleanup_driver()
-
