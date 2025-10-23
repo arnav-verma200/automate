@@ -10,7 +10,7 @@ import queue
 import threading
 
 print("🔄 Loading Whisper model...")
-model = whisper.load_model("base", device="cpu")
+model = whisper.load_model("small", device="cpu")
 
 # 🔍 Pick your mic (try 1, 7, or 15)
 mic_index = 15
