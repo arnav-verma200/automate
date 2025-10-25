@@ -1,0 +1,197 @@
+===============================================================================
+                    JJ VOICE ASSISTANT - COMMAND REFERENCE
+===============================================================================
+
+📌 IMPORTANT: All voice commands must start with "jj" (e.g., "jj play circles in spotify")
+
+===============================================================================
+🎵 SPOTIFY COMMANDS
+===============================================================================
+
+Play Music:
+  • play <song name> in spotify
+  • play <song name> on spotify
+  
+  Examples:
+    - jj play circles in spotify
+    - jj play post malone on spotify
+    - jj play blinding lights in spotify
+
+Playback Control:
+  • spotify pause          - Pause current song
+  • spotify play           - Resume playback
+  • spotify next           - Skip to next song
+  • spotify previous       - Go to previous song
+  • spotify prev           - Go to previous song
+  • spotify back           - Go to previous song
+
+Quick Controls (without "spotify" prefix):
+  • pause                  - Pause music
+  • pause music            - Pause music
+  • next                   - Next song
+  • next song              - Next song
+  • skip                   - Skip to next song
+  • previous               - Previous song
+  • previous song          - Previous song
+  • back                   - Previous song
+  • go back                - Previous song
+
+App Management:
+  • open spotify           - Open Spotify application
+
+===============================================================================
+📺 YOUTUBE COMMANDS
+===============================================================================
+
+Play Videos:
+  • play <video name> in youtube
+  • play <video name> on youtube
+  
+  Examples:
+    - jj play funny cat videos in youtube
+    - jj play cooking tutorial on youtube
+    - jj play music video in youtube
+
+Open YouTube:
+  • open youtube           - Open YouTube in browser
+
+===============================================================================
+💬 WHATSAPP COMMANDS
+===============================================================================
+
+Send Message:
+  • message <contact name>
+  
+  Process:
+    1. Say: "jj message John"
+    2. JJ will ask: "What message do you want to send to John?"
+    3. Say: "jj Hello, how are you?"
+  
+  ⚠️ NOTE: JJ will ALWAYS message the FIRST person in WhatsApp search results
+
+Open WhatsApp:
+  • open whatsapp          - Open WhatsApp Web
+
+===============================================================================
+🔍 SEARCH COMMANDS
+===============================================================================
+
+Google Search:
+  • search <query>
+  
+  Examples:
+    - jj search python tutorials
+    - jj search weather in Delhi
+    - jj search latest news
+
+===============================================================================
+🌐 OPEN APPLICATIONS & WEBSITES
+===============================================================================
+
+Open Applications:
+  • open chrome            - Open Google Chrome
+  • open firefox           - Open Firefox
+  • open msedge            - Open Microsoft Edge
+  • open <app name>        - Open any installed application
+
+Open Websites:
+  • open youtube           - Open YouTube
+  • open whatsapp          - Open WhatsApp Web
+  • open facebook          - Open Facebook.com
+  • open twitter           - Open Twitter.com
+  • open <website name>    - Open any website (adds .com automatically)
+  
+  Examples:
+    - jj open gmail
+    - jj open reddit
+    - jj open instagram
+
+===============================================================================
+⚙️ SYSTEM COMMANDS
+===============================================================================
+
+Exit Program:
+  • exit                   - Close JJ and cleanup
+
+===============================================================================
+📝 INPUT MODES
+===============================================================================
+
+Mode 1: Continuous Voice Control
+  • Always listening for "jj" commands
+  • Press ESC to stop listening and exit
+  • Most convenient for hands-free operation
+
+Mode 2: Button Voice Control
+  • Hold SPACE bar to speak
+  • Release SPACE to process command
+  • Must start command with "jj"
+  • Press ESC to cancel
+
+Mode 3: Typing Mode
+  • Type commands in terminal
+  • No need to say "jj" when typing
+  • Press Enter to execute
+
+===============================================================================
+💡 TIPS & NOTES
+===============================================================================
+
+✅ Voice Recognition Tips:
+  • Speak clearly and at normal pace
+  • Always start with "jj" in voice modes
+  • Wait for "Listening..." prompt before speaking
+  • Microphone calibrates on first run
+
+✅ Spotify Requirements:
+  • Spotify must be installed on your computer
+  • Desktop app will open automatically
+  • First song press ENTER to play
+
+✅ WhatsApp Usage:
+  • First time: Scan QR code in browser
+  • Login persists for future sessions
+  • Always selects first search result
+  • Make sure contact name is accurate
+
+✅ Chrome Browser:
+  • First time: May need to login to Google
+  • Session saves for future use
+  • All web commands use Chrome
+
+===============================================================================
+🎯 COMMAND EXAMPLES - VOICE MODE
+===============================================================================
+
+"jj play bad guy in spotify"
+"jj play minecraft in youtube"
+"jj message mom"
+"jj search best restaurants near me"
+"jj open gmail"
+"jj spotify pause"
+"jj next"
+"jj previous"
+"jj exit"
+
+===============================================================================
+🎯 COMMAND EXAMPLES - TYPING MODE
+===============================================================================
+
+play circles in spotify
+play funny videos in youtube
+message dhruv
+search python programming
+open instagram
+spotify next
+pause
+exit
+
+===============================================================================
+
+📧 Need Help? Make sure to:
+  1. Start Spotify before using music commands
+  2. Scan WhatsApp QR code on first use
+  3. Speak clearly with "jj" prefix
+  4. Check microphone permissions
+
+===============================================================================

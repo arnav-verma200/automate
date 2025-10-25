@@ -22,7 +22,7 @@ def get_voice_input():
         r.adjust_for_ambient_noise(source, duration=0.5)
         start_time = time.time()
         try:
-          audio = r.listen(source, timeout=30, phrase_time_limit=10)
+          audio = r.listen(source, timeout=30, phrase_time_limit=20)
           duration = time.time() - start_time
           print(f"Recognizing ({duration:.1f}s)...")
           
